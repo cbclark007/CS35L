@@ -1,0 +1,115 @@
+Homework 7: Verifying and publishing a backported change
+
+1. made this file
+
+2. In a new diffutils directory, I ran:
+git checkout v3.0 -b quote
+
+3. Install change with patch command
+
+patch -p1 < ../../quote-3.0-patch.txt 
+
+4. Emacs function add-change-log-entry-other-window (C-x 4 a)
+
+Adds a new entry to the change log file for the file I am currently editing.
+If that file is a backup file, it makes an entry for the file's parent.
+
+5. Compose an appropriate changelog entry for the patch by adapting the
+change log from the original patch.
+
+I then copied the patch into the diffutils directory since I need
+to commit it soon. (so I had the original)
+
+cp ../../quote-3.0-patch.txt quote-3.0-patch.txt
+
+Then, I ran:
+emacs quote-3.0-patch.txt
+C-x 4 a
+
+Which added the changelog, and I composed my message:
+
+2020-02-27 Christopher Bradley Clark <clark@lnxsrv07.seas.ucla.edu>
+	   *quote-3.0-patch.txt: Christopher's fabulous patch for Assignment7
+replaces the grave quotes with regular quotes in the functioning code. It doesn't
+affect the grave quotes in comments.
+
+6. Commit changes to the new branch
+
+man git commit
+I used this to find how to commit a file with the text from the file (-F)
+
+git add .
+git commit -F ChangeLog
+
+7. use the command git format-patch to generate a file
+
+man git format-patch
+
+There was an example at the bottom:
+$ git format-patch -k --stdout 
+Makes a patch file for the last k commits and prints to stdout
+
+Then, I ran:
+git format-patch -1 --stdout > formatted-patch.txt
+
+8. Verify the patch works
+
+cd ..
+mkdir testpatch
+cd testpatch
+git clone https://git.savannah.gnu.org/git/diffutils.git
+cd diffutils
+git checkout v3.0 -b patchery
+man git am
+(learning about the command)
+git am < ../../diffutils/formatted-patch.txt
+
+Output:
+.git/rebase-apply/patch:30: trailing whitespace.
+ 
+.git/rebase-apply/patch:33: space before tab in indent.
+ 			     || (e == LONGINT_INVALID_SUFFIX_CHAR && **argptr == delimiter))
+.git/rebase-apply/patch:41: space before tab in indent.
+ 			      _("SKIP values may be followed by the following multiplicative suffixes:\n\
+.git/rebase-apply/patch:46: space before tab in indent.
+ 			      _("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."));
+.git/rebase-apply/patch:50: space before tab in indent.
+ 			    {
+warning: squelched 74 whitespace errors
+warning: 79 lines add whitespace errors.
+
+It seems like the warnings are minor and there isn't much to worry about.
+
+Then, I build the resulting system again.
+
+./bootstrap
+
+cd ..
+wget https://web.cs.ucla.edu/classes/winter20/cs35L/assign/diffutils-gets.diff
+cd diffutils
+patch -p0 < ../diffutils-gets.diff
+
+./configure
+make
+make check
+
+There was an error when executing make check:
+/bin/sh: /bin/sh: cannot execute binary file
+
+Which caused the rest of the run to return errors. However, this was the same
+thing that happened when I ran make check in the lab section.
+
+To make sure it worked, I tested functionality:
+
+./src/diff . -
+Output:
+/src/diff: cannot compare '-' to a directory
+
+./src/diff --help
+Output had no grave marks, only '.
+
+So, I can conclude that the patch works.
+
+9. Verifying Changelog entry works
+make distdir
+cd diffutils-3.0.1-b1415/

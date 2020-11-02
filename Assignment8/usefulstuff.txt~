@@ -1,0 +1,11 @@
+git for-each-ref --sort=-committerdate refs/heads --count=10 --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'
+
+
+>>> import os
+>>> os.getcwd()
+'/w/home.26/cs/ugrad/clarkc/CS35L/Assignment8'
+>>> cwd = os.getcwd()
+>>> cwd.rfind('/')
+32
+>>> cwd[:32]
+'/w/home.26/cs/ugrad/clarkc/CS35L'

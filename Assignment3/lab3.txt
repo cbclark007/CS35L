@@ -1,0 +1,178 @@
+Assignment 3: Modifying and rewriting software
+
+Laboratory Log
+
+First, I ran "man ls" to see exactly what the option -A did.
+It is supposed to list everything except . and ..
+
+I then checked the coreutils version of the ls in /usr/bin/ls with
+man /usr/bin/ls
+The version was GNU coreutils 8.22
+
+Then following the instructions 1-6
+
+The following was done in a new folder called "thisbetterwork" with
+mkdir thisbetterwork
+
+1. I grabbed the Coreutils 8.29 source code compressed tarball with:
+wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz
+
+as well as the signature and keyring:
+wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz.sig
+wget https://ftp.gnu.org/gnu/gnu-keyring.gpg
+
+I then ran the command
+gpg --verify --keyring ./gnu-keyring.gpg coreutils-8.29.tar.xz.sig
+to verify the signature. This was the output:
+gpg: Signature made Wed 27 Dec 2017 10:29:05 AM PST using RSA key ID 306037D9
+gpg: /u/cs/ugrad/clarkc/.gnupg/trustdb.gpg: trustdb created
+gpg: Good signature from "Pádraig Brady <P@draigBrady.com>"
+gpg:                 aka "Pádraig Brady <pbrady@redhat.com>"
+gpg:                 aka "Pádraig Brady <pixelbeat@gnu.org>"
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: 6C37 DC12 121A 5006 BC1D  B804 DF6F D971 3060 37D9
+
+There is a warning that "this key is not certified with a trusted
+signature. There is no indication that the signature belongs to the owner."
+
+I'm not the owner, so the warning makes sense that I might not be the 
+owner of the signature.
+
+2. Compiling and installing coreutils
+
+I ran:
+man tar
+to understand how to use tar
+
+I then ran:
+tar -xvf coreutils-8.29.tar.xz
+which created a folder called coreutils-8.29
+
+I also ran:
+mkdir temp
+to make a directory for my temporary coreutils installation.
+
+Then, I navigated into the coreutils-8.29 folder with
+cd coreutils-8.29
+
+I read (most of) the INSTALL file to find out how to install coreutils
+into a specific directory. It is to use the option
+--prefix=PREFIX where PREFIX is an absolute file name.
+
+Then, I ran:
+./configure --prefix=/u/cs/ugrad/clarkc/thisbetterwork/temp
+to configure coreutils.
+
+Then I ran:
+make
+make install
+
+to finish the installation.
+
+There were some warnings when running the make command but nothing
+to be concerned about.
+
+make install ran without errors.
+
+3. Reproducing the bug
+
+In the temp directory, I ran
+/bin/ls -a
+which outputted:
+.  ..  bin  libexec  share
+
+Then, I ran:
+/bin/ls -A
+which outputted:
+bin  libexec  share
+
+Then, I ran
+/bin/ls -aA
+which outputted:
+.  ..  bin  libexec  share
+
+But, it should not have outputted . or .. meaning the bug exists here.
+
+4. Applying patch of Bug#30963
+
+I navigated into the coreutils-8.29 directory with
+cd coreutils-8.29
+from the thisbetterwork directory
+
+I then ran 
+touch ls_fix
+emacs ls_fix
+and copied the contents of the patch file into ls_fix
+
+Then I ran 
+man patch
+to learn about patch. -pnum strips the smallest prefix containing
+num leading slashes from each file name found in the patch file.
+
+I then ran:
+patch -p1 < ls_fix
+
+This is because while I had the tests and src directories, I did not have
+the directories a or b. So, to get rid of them, I use -p1 to ignore
+the first part of the file path (a/ or b/)
+
+patching file NEWS
+Hunk #1 FAILED at 4.
+1 out of 1 hunk FAILED -- saving rejects to file NEWS.rej
+patching file src/ls.c
+Hunk #1 succeeded at 1900 (offset -3 lines).
+patching file tests/local.mk
+patching file tests/ls/a-option.sh
+
+Reading the output, there seems to be just one error that fails to add
+changes to the NEWS file.
+
+5. make command
+
+I ran:
+make
+inside the coreutils-8.29 directory.
+The error was in automake:
+
+line 81: automake-1.15: command not found
+WARNING: 'automake-1.15' is missing on your system.
+         You should only need it if you modified 'Makefile.am' or
+         'configure.ac' or m4 files included by 'configure.ac'.
+         The 'automake' program is part of the GNU Automake package:
+         <http://www.gnu.org/software/automake>
+         It also requires GNU Autoconf, GNU m4 and Perl in order to run:
+         <http://www.gnu.org/software/autoconf>
+         <http://www.gnu.org/software/m4/>
+         <http://www.perl.org/>
+make: *** [Makefile:5997: Makefile.in] Error 127
+
+Since there was an error, I went on piazza and found a fix:
+autoreconf -fi
+to reconfigure.
+
+Then I ran "$make" again, and it proceeded without errors - just a few
+warnings that were the same from before.
+
+There are an incredible number of lines, so I won't go through one by one.
+The main point is that make is recompiling every single file, whereas
+only the changed file of ls.c and whatever else was applied in the 
+patch needs to be recompiled. Everything else is unnecessary.
+
+6. Verifying changes fixed the bug
+
+make applies changes to the source directory, so inside the coreutils-8.29
+folder, I ran:
+./src/ls -a
+to verify that -a worked the way it should (with . and ..)
+./src/ls -A
+to verify that -A still works properly (without . and ..)
+and finally:
+./src/ls -aA
+which outputted everything without . and .. the way it should.
+
+I didn't want to copy over the ls output since there was quite a bit
+in the coreutils folder.
+
+Yay!
+

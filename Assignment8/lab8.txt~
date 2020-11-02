@@ -1,0 +1,110 @@
+Laboratory 8: Git spelunking
+
+In ~eggert/src/gnu/emacs-CS-35L
+
+1. Working files only:
+After exploring the manual page of "du", I ran:
+
+du -s -h --exclude ".git"
+Output:
+159M
+(or 159 megabytes)
+
+To get the disk space used to represent the Git repository, I run:
+du -s -h .git
+Output:
+350M
+(or 350 Megabytes)
+
+To further inspect the contents of the git repository, I run
+$ du -h .git
+Which outputs directory sizes under .git
+I also run 
+$ du -h -a .git
+which includes files.
+
+I found that the .git/objects folder consumed the most repository space, with a total
+of 342M out of the 350 total. This is 97% of the space.
+
+Within it, there was a file:
+.git/objects/pack/pack-24e56b1749b9320c560213d9045fa6cee42b4174.pack
+That took up 311M of space.
+
+With some research, I found that pack files are where git compresses and stores various
+objects from different commits and versions. Obviously, since this is storing all the
+past data, it is going to take up a lot of space.
+
+2. # of branches local to the repository, # of branches remote
+
+First, I look at:
+man git branch
+
+To get a list of local branches, I run:
+git branch
+I then ran the following to get a total number of branches:
+git branch | wc -l
+Output:
+176
+
+There seem to be 176 local branches.
+
+The remote branches can be found with:
+git branch -r
+To get the number of lines (aka number of remote branches), I ran:
+git branch -r | wc -l
+Output:
+177
+
+However, origin/HEAD is not actually a branch, and it is included in the list of 
+remote branches.
+
+So, there are actually 176 remote branches.
+
+3. Remote repositories and where they are
+
+I read up on:
+man git remote
+
+I ran:
+git remote
+
+There was only one line of output:
+origin
+
+So it looks like there is only one repository remote to this repository.
+
+To find out where it was located, I ran:
+git remote -v
+
+The repository is located at:
+https://git.savannah.gnu.org/git/emacs.git
+
+4. Ten local branches most recently committed to
+
+man git for-each-ref
+to learn about the git for-each-ref command
+
+Then, I ran
+git for-each-ref --sort=-committerdate --count=10 refs/heads
+This outputted the 10 most recent branches most recently committed to:
+master
+scratch/joaot/make-completion-at-point-function
+feature/windows-with-utils
+scratch/completion-api
+scratch/a-modest-completion-redesign-proposal
+scratch/fido-mode
+feature/gnus-select2
+feature/extend_face_id
+scratch/jit-lock-antiblink-cleaned-up
+emacs-26
+
+5. How many commits are in the master branch?
+
+man git rev-list
+git rev-list --count master
+Output:
+139583
+
+There have been 139583 commits in the master branch.
+
+6. 

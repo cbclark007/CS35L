@@ -1,0 +1,178 @@
+Laboratory 4: Debugging a C Program
+
+I created a directory called Assignment 4 located under
+my home directory with the path $HOME/CS35L/Assignment4
+
+There, I ran:
+wget https://web.cs.ucla.edu/classes/winter20/cs35L/assign/coreutils-with-bug.tar.gz
+
+to download the buggy coreutils.
+I then unzipped it with:
+tar -xvf coreutils-with-bug.tar.gz
+
+After unzipping it, I created a build directory:
+mkdir firstbuild
+
+Then, I navigated into the coreutils-with-bug folder:
+cd coreutils-with-bug
+
+And configured the coreutils installation location with:
+./configure --prefix=/u/cs/ugrad/clarkc/CS35L/Assignment4/firstbuild
+
+I then ran:
+make
+
+There was an error when running make:
+In file included from utimecmp.c:41:
+utimens.h:2:5: error: conflicting types for 'futimens'
+    2 | int futimens (int, char const *, struct timespec const [2]);
+      |     ^~~~~~~~
+In file included from utimecmp.h:25,
+                 from utimecmp.c:25:
+/usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+  373 | extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+      |            ^~~~~~~~
+make[3]: *** [Makefile:659: utimecmp.o] Error 1
+
+I then ran:
+make install
+
+But it threw the same error: conflicting types for 'futimens'.
+
+To patch this error, I got the patch file with:
+wget https://web.cs.ucla.edu/classes/winter20/cs35L/assign/coreutils.diff
+
+and then ran
+patch -p0 < coreutils.diff
+
+Then, I rebuilt the coreutils with:
+make
+make install
+
+Looking at the coreutils.diff file, I found that the reason there
+were errors when building was because of duplicate namings of 
+futimens and tee.
+
+To fix this, the patch renamed the futimens and tee functions to 
+coreutils_futimens and coreutils_tee respectively, which is then
+used in the rest of the file.
+
+I reproduced the bug with ls -t with the commands shown in the lab:
+tmp=$(mktemp -d)
+cd $tmp
+touch -d '1918-11-11 11:00 GMT' wwi-armistice-cs35L
+touch now
+sleep 1
+touch now1
+TZ=UTC0 ls -lt --full-time wwi-armistice-cs35L now now1
+
+output:
+-rw-r--r-- 1 clarkc csugrad 0 1918-11-11 03:00:00.000000000 -0800 wwi-armistice-cs35L
+-rw-r--r-- 1 clarkc csugrad 0 2020-02-05 16:07:37.090431643 -0800 now1
+-rw-r--r-- 1 clarkc csugrad 0 2020-02-05 16:07:36.083400802 -0800 now
+
+I then went through the debugging process with gdb:
+My temp folder is:
+/tmp/tmp.RVU3jFwJtT
+
+I navigate to my firstbuild directory for the temp installation
+Then, I run:
+gdb ./bin/ls
+
+(gdb) info func
+
+to get all the functions related to time in ls.c
+
+(gdb) break compare_atime
+(gdb) break compare_ctime
+(gdb) break compare_mtime
+(gdb) break compstr_atime
+(gdb) break compstr_ctime
+(gdb) break compstr_mtime
+(gdb) break rev_cmp_atime
+(gdb) break rev_cmp_ctime
+(gdb) break rev_cmp_mtime
+
+Then:
+(gdb) run -lt --full-time /tmp/tmp.RVU3jFwJtT
+
+I used c and s to run through the program.
+
+Of all the breakpoints, only compare_mtime was triggered.
+Within compare_mtime, cmp_mtime was called and timespec_cmp was
+called.
+
+It seems that there is something wrong with the comparison of times.
+I run:
+(gdb) list timespec_cmp
+
+which outputs:
+43    /* Return negative, zero, positive if A < B, A == B, A > B, respectively.
+44       Assume the nanosecond components are in range, or close to it.  */
+45	 static inline int
+46	 timespec_cmp (struct timespec a, struct timespec b)
+47	 {
+48	   int diff = a.tv_sec - b.tv_sec;
+49	     return diff ? diff : a.tv_nsec - b.tv_nsec;
+50	     }
+51	     
+52	     # if ! HAVE_DECL_NANOSLEEP
+
+Since the 1918 date is appearing first, there is probably something
+wrong with the diff calculation. To fix this for the proper return
+values, I first found where timespec_cmp is located. It's in 
+the file timespec.h in lib.
+
+I navigated into the coreutils-with-bug folder and then the lib 
+folder within it.
+
+I then made a copy of timespec.h:
+cp timespec.h timespec_patch.h
+
+And made the following change:
+timespec_cmp (struct timespec a, struct timespec b)
+{
+  if(a.tv_sec == b.tv_sec) {
+    return 0;
+  } else if (a.tv_sec > b.tv_sec) {
+    return 1;
+  } else {
+    return -1;
+  }
+}
+
+Afterwards, I make my diff file with:
+diff -u timespec.h timespec_patch.h > lab4.diff
+
+I then patched timespec.h with 
+patch -p0 < lab4.diff
+
+Then, I rebuilt coreutils in the coreutils-with-bug directory with:
+make
+make install
+
+And then I re-tested with my fix, by first navigating into my 
+firstbuild folder (where I built coreutils) and running:
+./bin/ls -lt --full-time /tmp/tmp.RVU3jFwJtT
+
+The output was:
+-rw-r--r-- 1 clarkc csugrad 0 2020-02-05 16:07:37.090431643 -0800 now1
+-rw-r--r-- 1 clarkc csugrad 0 2020-02-05 16:07:36.083400802 -0800 now
+-rw-r--r-- 1 clarkc csugrad 0 1918-11-11 03:00:00.000000000 -0800 wwi-armistice-cs35L
+
+Which means the problem is fixed!
+
+Next, I tested the problem in my home directory rather than the $tmp
+directory. In the file path ~/CS35L/Assignment4/testTemp, I tested
+the commands on the website once more. The output was:
+
+-rw-r--r-- 1 clarkc csugrad 0 2054-12-17 17:28:16.000000000 +0000 wwi-armistice-cs35L
+-rw-r--r-- 1 clarkc csugrad 0 2020-02-06 05:23:38.152023000 +0000 now1
+-rw-r--r-- 1 clarkc csugrad 0 2020-02-06 05:23:34.647004000 +0000 now
+
+Suddenly, there is a 2054 instead of 1918.
+On piazza, there was some information about the file systems on
+the server. /tmp uses signed 64-bit, while the HOME directory
+uses unsigned 32-bit. Therefore, it is probably due to an overflow
+of the time in the 32-bit diretory that causes the date to loop
+around to the future.

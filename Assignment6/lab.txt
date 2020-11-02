@@ -1,0 +1,298 @@
+Laboratory 6: Who's linked to what?
+
+I made my Assignment6 folder on the server and ran:
+wget https://web.cs.ucla.edu/classes/winter20/cs35L/assign/simpgmp.c
+
+to get the simpgmp.c file.
+
+1. gcc -lgmp simpgmp.c -o simpgmp
+test runs:
+./simpgmp 2
+outputs 4
+./simpgmp 3
+outputs 8
+./simpgmp 4
+outputs 16
+
+2. Compute 2^24
+./simpgmp 24
+Ouptut:
+16777216
+
+./simpgmp 16777216
+output: a really big number ending in 7536 and beginning with 1818
+so I ran:
+./simpgmp 16777216 | wc -L
+Output:
+5050446
+
+So the output is as it shoudl be.
+
+3. ldd command
+I ran:
+ldd ./simpgmp
+Output:
+linux-vdso.so.1 =>  (0x00007ffd04b55000)
+libgmp.so.10 => /lib64/libgmp.so.10 (0x00007fd68c5c6000)
+libc.so.6 => /lib64/libc.so.6 (0x00007fd68c1f8000)
+/lib64/ld-linux-x86-64.so.2 (0x00007fd68c83e000)
+
+4. use strace
+strace ./simpgmp 4
+Output:
+execve("./simpgmp", ["./simpgmp", "4"], [/* 41 vars */]) = 0
+brk(NULL)                               = 0x15a8000
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f758f474000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=158997, ...}) = 0
+mmap(NULL, 158997, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f758f44d000
+close(3)                                = 0
+open("/lib64/libgmp.so.10", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200\304\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=495720, ...}) = 0
+mmap(NULL, 2584736, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f758efdc000
+mprotect(0x7f758f052000, 2093056, PROT_NONE) = 0
+mmap(0x7f758f251000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x75000) = 0x7f758f251000
+close(3)                                = 0
+open("/lib64/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P&\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=2156072, ...}) = 0
+mmap(NULL, 3985888, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f758ec0e000
+mprotect(0x7f758edd1000, 2097152, PROT_NONE) = 0
+mmap(0x7f758efd1000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1c3000) = 0x7f758efd1000
+mmap(0x7f758efd7000, 16864, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f758efd7000
+close(3)                                = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f758f44c000
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f758f44a000
+arch_prctl(ARCH_SET_FS, 0x7f758f44a740) = 0
+mprotect(0x7f758efd1000, 16384, PROT_READ) = 0
+mprotect(0x7f758f251000, 8192, PROT_READ) = 0
+mprotect(0x600000, 4096, PROT_READ)     = 0
+mprotect(0x7f758f475000, 4096, PROT_READ) = 0
+munmap(0x7f758f44d000, 158997)          = 0
+brk(NULL)                               = 0x15a8000
+brk(0x15c9000)                          = 0x15c9000
+brk(NULL)                               = 0x15c9000
+fstat(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(136, 2), ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f758f473000
+write(1, "16\n", 316
+)                     = 3
+exit_group(0)                           = ?
++++ exited with 0 +++
+
+There are a couple calls in here related to dynamic linking. From the ldd
+command I ran previously, I found where the program accessed the dynamic
+libraries.
+
+First, these lines are related to dynamic linking:
+open("/lib64/libgmp.so.10", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200\304\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=495720, ...}) = 0
+mmap(NULL, 2584736, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f758efdc000
+mprotect(0x7f758f052000, 2093056, PROT_NONE) = 0
+mmap(0x7f758f251000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x75000) = 0x7f758f251000
+close(3)
+
+This is because open opens libgmp.so.10 which was found in the ldd command.
+The following lines use the library in (3) to read it, get data, allocate
+memory, etc, and then close it.
+
+Then, the lines:
+open("/lib64/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P&\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=2156072, ...}) = 0
+mmap(NULL, 3985888, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f758ec0e000
+mprotect(0x7f758edd1000, 2097152, PROT_NONE) = 0
+mmap(0x7f758efd1000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1c3000) = 0x7f758efd1000
+mmap(0x7f758efd7000, 16864, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f758efd7000
+close(3)                                = 0
+
+The relationship follows the same way as the previous lines in that it opens
+libc.so.6 (found with the ldd command) and uses the dynamic library.
+
+It doesn't seem like strace shows the program accessing the other two files
+shown in ldd.
+
+5. Student ID investigation
+ls /usr/bin | awk '(NR-305326742)%251 == 0'
+output:
+akonadi_kabc_resource
+cupstestppd
+g++
+hugeadm
+ksh
+ms_print
+pdftohtml
+repodiff
+systemd-escape
+xfreerdp
+
+6. ldd on stuff
+ldd akonadi_kabc_resource
+Output:
+Lots of libraries, no errors.
+
+ldd /usr/bin/cupstestpd
+output:
+more libraries
+
+ldd /usr/bin/g++
+output:
+4 libraries
+
+ldd /usr/bin/hugeadm
+output:
+3 libraries
+
+ldd /usr/bin/ksh
+output:
+6 libraries
+
+ldd /usr/bin/ms_print
+output:
+not a dynamic executable
+This just means that this does not use dynamic libraries.
+
+ldd /usr/bin/pdftohtml
+Output:
+another list of shared libraries
+
+ldd /usr/bin/repodiff
+output:
+not a dynamic executable
+Again, this just means that repodiff doesn't use shared libraries.
+
+ldd /usr/bin/systemd-escape
+Output:
+5 shared libraries
+
+ldd /usr/bin/xfreerdp
+output:
+a lot of shared libraries.
+
+There don't seem to have been any errors.
+
+7. Sorted list of every dynamic library that is used by any of the commands
+on the list (omitting dpulicates)
+
+I ended up writing a little bash script called ldd_output that outputs
+the unsorted list:
+
+#!/bin/bash                                                                                                                                         
+
+for file in $(ls /usr/bin | awk '(NR-305326742)%251 == 0')
+do
+    ldd /usr/bin/$file | grep -E '^.*\(.*\).*$' |
+        sed 's/(.*)//g' | sed 's/^[[:blank:]]*//g'
+done
+
+Then, I run:
+./ldd_output | sort -u
+output:
+/lib64/ld-linux-x86-64.so.2 
+libacl.so.1 => /lib64/libacl.so.1 
+libakonadi-kde.so.4 => /lib64/libakonadi-kde.so.4 
+libakonadiprotocolinternals.so.1 => /lib64/libakonadiprotocolinternals.so.1 
+libattica.so.0.4 => /lib64/libattica.so.0.4 
+libattr.so.1 => /lib64/libattr.so.1 
+libaudit.so.1 => /lib64/libaudit.so.1 
+libavahi-client.so.3 => /lib64/libavahi-client.so.3 
+libavahi-common.so.3 => /lib64/libavahi-common.so.3 
+libbz2.so.1 => /lib64/libbz2.so.1 
+libcap-ng.so.0 => /lib64/libcap-ng.so.0 
+libcap.so.2 => /lib64/libcap.so.2 
+libcom_err.so.2 => /lib64/libcom_err.so.2 
+libcrypto.so.10 => /lib64/libcrypto.so.10 
+libcrypt.so.1 => /lib64/libcrypt.so.1 
+libc.so.6 => /lib64/libc.so.6 
+libcupsimage.so.2 => /lib64/libcupsimage.so.2 
+libcups.so.2 => /lib64/libcups.so.2 
+libdbus-1.so.3 => /lib64/libdbus-1.so.3 
+libdbusmenu-qt.so.2 => /lib64/libdbusmenu-qt.so.2 
+libdl.so.2 => /lib64/libdl.so.2 
+libdw.so.1 => /lib64/libdw.so.1 
+libelf.so.1 => /lib64/libelf.so.1 
+libexpat.so.1 => /lib64/libexpat.so.1 
+libfam.so.0 => /lib64/libfam.so.0 
+libffi.so.6 => /lib64/libffi.so.6 
+libfontconfig.so.1 => /lib64/libfontconfig.so.1 
+libfreebl3.so => /lib64/libfreebl3.so 
+libfreerdp2.so.2 => /lib64/libfreerdp2.so.2 
+libfreerdp-client2.so.2 => /lib64/libfreerdp-client2.so.2 
+libfreetype.so.6 => /lib64/libfreetype.so.6 
+libgcc_s.so.1 => /lib64/libgcc_s.so.1 
+libgcrypt.so.11 => /lib64/libgcrypt.so.11 
+libglib-2.0.so.0 => /lib64/libglib-2.0.so.0 
+libgobject-2.0.so.0 => /lib64/libgobject-2.0.so.0 
+libgpg-error.so.0 => /lib64/libgpg-error.so.0 
+libgsm.so.1 => /lib64/libgsm.so.1 
+libgssapi_krb5.so.2 => /lib64/libgssapi_krb5.so.2 
+libgthread-2.0.so.0 => /lib64/libgthread-2.0.so.0 
+libICE.so.6 => /lib64/libICE.so.6 
+libjbig.so.2.0 => /lib64/libjbig.so.2.0 
+libjpeg.so.62 => /lib64/libjpeg.so.62 
+libk5crypto.so.3 => /lib64/libk5crypto.so.3 
+libkabc.so.4 => /lib64/libkabc.so.4 
+libkdecore.so.5 => /lib64/libkdecore.so.5 
+libkdeui.so.5 => /lib64/libkdeui.so.5 
+libkeyutils.so.1 => /lib64/libkeyutils.so.1 
+libkio.so.5 => /lib64/libkio.so.5 
+libkrb5.so.3 => /lib64/libkrb5.so.3 
+libkrb5support.so.0 => /lib64/libkrb5support.so.0 
+libkresources.so.4 => /lib64/libkresources.so.4 
+liblcms2.so.2 => /lib64/liblcms2.so.2 
+liblz4.so.1 => /lib64/liblz4.so.1 
+liblzma.so.5 => /lib64/liblzma.so.5 
+libm.so.6 => /lib64/libm.so.6 
+libnepomukquery.so.4 => /lib64/libnepomukquery.so.4 
+libnepomuk.so.4 => /lib64/libnepomuk.so.4 
+libnepomukutils.so.4 => /lib64/libnepomukutils.so.4 
+libopenjpeg.so.1 => /lib64/libopenjpeg.so.1 
+libpcre.so.1 => /lib64/libpcre.so.1 
+libpng15.so.15 => /lib64/libpng15.so.15 
+libpoppler.so.46 => /lib64/libpoppler.so.46 
+libpthread.so.0 => /lib64/libpthread.so.0 
+libqca.so.2 => /lib64/libqca.so.2 
+libQtCore.so.4 => /lib64/libQtCore.so.4 
+libQtDBus.so.4 => /lib64/libQtDBus.so.4 
+libQtGui.so.4 => /lib64/libQtGui.so.4 
+libQtNetwork.so.4 => /lib64/libQtNetwork.so.4 
+libQtSql.so.4 => /lib64/libQtSql.so.4 
+libQtSvg.so.4 => /lib64/libQtSvg.so.4 
+libQtXml.so.4 => /lib64/libQtXml.so.4 
+libresolv.so.2 => /lib64/libresolv.so.2 
+librt.so.1 => /lib64/librt.so.1 
+libselinux.so.1 => /lib64/libselinux.so.1 
+libSM.so.6 => /lib64/libSM.so.6 
+libsolid.so.4 => /lib64/libsolid.so.4 
+libsopranoclient.so.1 => /lib64/libsopranoclient.so.1 
+libsoprano.so.4 => /lib64/libsoprano.so.4 
+libssl.so.10 => /lib64/libssl.so.10 
+libstdc++.so.6 => /lib64/libstdc++.so.6 
+libstreamanalyzer.so.0 => /lib64/libstreamanalyzer.so.0 
+libstreams.so.0 => /lib64/libstreams.so.0 
+libsystemd.so.0 => /lib64/libsystemd.so.0 
+libtiff.so.5 => /lib64/libtiff.so.5 
+libudev.so.1 => /lib64/libudev.so.1 
+libutil.so.1 => /lib64/libutil.so.1 
+libuuid.so.1 => /lib64/libuuid.so.1 
+libwinpr2.so.2 => /lib64/libwinpr2.so.2 
+libX11.so.6 => /lib64/libX11.so.6 
+libXau.so.6 => /lib64/libXau.so.6 
+libxcb.so.1 => /lib64/libxcb.so.1 
+libXcursor.so.1 => /lib64/libXcursor.so.1 
+libXext.so.6 => /lib64/libXext.so.6 
+libXfixes.so.3 => /lib64/libXfixes.so.3 
+libXft.so.2 => /lib64/libXft.so.2 
+libXinerama.so.1 => /lib64/libXinerama.so.1 
+libXi.so.6 => /lib64/libXi.so.6 
+libxkbfile.so.1 => /lib64/libxkbfile.so.1 
+libxml2.so.2 => /lib64/libxml2.so.2 
+libXpm.so.4 => /lib64/libXpm.so.4 
+libXrandr.so.2 => /lib64/libXrandr.so.2 
+libXrender.so.1 => /lib64/libXrender.so.1 
+libXtst.so.6 => /lib64/libXtst.so.6 
+libXv.so.1 => /lib64/libXv.so.1 
+libz.so.1 => /lib64/libz.so.1 
+linux-vdso.so.1 => 

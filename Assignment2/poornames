@@ -1,0 +1,152 @@
+#!/bin/bash
+
+checkName () {
+    dir=$1
+    #echo "looking at the directory: $dir"
+    outputs=()
+    if [[ ! -r "${dir}" ]]
+    then
+	echo "error examining directory $dir" 1<&2
+	return
+    fi
+    for file in $(ls -a "${dir}")
+    do
+	#echo "first checking same names"
+        numFiles=$(find "${dir}" -maxdepth 1 -iname "${file}" | wc -l)
+	if [ "$numFiles" -gt 1 ]
+	then
+	    fileToAdd="$dir"$(echo "${file}")
+	    #echo $fileToAdd
+	    if [[ -d "${fileToAdd}" ]]
+	    then
+		outputs+=( "$fileToAdd""/" )
+	    else
+		outputs+=( "$fileToAdd" )
+	    fi
+	    #outputs+=( $fileToAdd )
+	    #echo $outputs
+	fi
+    done
+    #echo ${outputs[@]}
+    #matchText=$(printf "%s\n" "${outputs[@]}")
+    while read -r line
+    do
+	#echo $line
+	#echo "SPACERBIG"
+	#echo "reading thru stuff"
+	if [[ -d "${line}" ]]
+	then
+	    outputs+=( "$line""/" )
+	else
+	    outputs+=( "$line" )
+	fi
+    done < <(find $dir -maxdepth 1 |
+		 grep -E "\/(-[^\/]*|\.[^\.\/]+|[^\/]*[^A-Za-z\._\/-]+[^\/]*)$|\/[^\/]{15,}$")
+    if [[ "${#outputs[@]}" -gt 0 ]]
+    then
+	printf "%s\n" "${outputs[@]}" | sort -u
+    fi    
+    #echo "SPACER"
+    #echo "${outputs[@]}"
+    #echo "BEFORE PRINTF"
+    #echo $2
+    if [[ $2 = "-r" ]]
+    then
+	#echo "recursion time here we go baby"
+	while read -r line
+	do
+	    #echo $line
+	    #echo "just printed that line"
+	    if [[ -d "${line}" ]]
+	    then
+		if [[ "$line" =~ .*/$ ]]
+		then
+		    idk="idk"
+		else
+		    line="${line}/"
+		fi
+		#echo "it's a directory:"
+		#echo $line
+		#echo "doing recursion"
+		#echo $line
+		checkName $line "-r"
+	    fi
+	done < <(find $dir -maxdepth 1 -mindepth 1 -type d)	
+    fi
+    
+    #echo "should printf now"
+    #printf "%s\n" "${outputs[@]}" | sort -u
+    return
+}
+
+#echo "$#"
+
+#checkDash =`echo $1 | grep -E "^-"`
+#echo $checkDash
+
+maxargs=1
+D=$1
+
+if [[ $1 = "-r" ]]
+then
+    maxargs=2
+    D=$2
+fi
+#echo $maxargs
+
+if [ "$#" -gt $maxargs ]
+then
+    echo "too many arguments" 1<&2
+    exit 1
+fi
+
+
+if [[ "$D" =~ ^-.* ]]
+then
+    echo "there's a dash"
+    exit 2
+fi
+
+if [[ -L "${D}" ]]
+then
+    echo "link, bad directory" 1<&2
+    exit 3
+elif [[ -d "${D}" ]]
+then
+    idk="idk" # do nothing? I guess
+    #    echo "D is a directory"
+    if [[ ! -r "${D}" ]]
+    then
+	echo "error examining directory" 1<&2
+    fi
+elif [[ "$D" == "" ]]
+then
+    D="."
+    if [[ ! -r "${D}" ]]
+    then
+	echo "error examining directory" 1<&2
+    fi
+#    echo "D is ."
+else
+    echo "bad directory" 1<&2
+    exit 4
+fi
+
+if [[ "$D" =~ .*/$ ]]
+then
+    idk="idk"
+else
+    D="${D}/"
+fi
+
+
+#echo $D
+
+if [ $maxargs -eq 2 ]
+then
+    checkName $D "-r"
+else
+    checkName $D
+fi
+
+    

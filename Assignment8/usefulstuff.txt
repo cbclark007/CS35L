@@ -1,0 +1,84 @@
+git for-each-ref --sort=-committerdate refs/heads --count=10 --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'
+
+
+>>> import os
+>>> os.getcwd()
+'/w/home.26/cs/ugrad/clarkc/CS35L/Assignment8'
+>>> cwd = os.getcwd()
+>>> cwd.rfind('/')
+32
+>>> cwd[:32]
+'/w/home.26/cs/ugrad/clarkc/CS35L'
+
+
+b'777e41d9a9ba12b9a485300e16fa4405a4f633c0\n'
+b'3c25412d2521b8f77778de839acb0350492c3634\n'
+b'3c25412d2521b8f77778de839acb0350492c3634\n'
+b'dd9515b11ebcab015a8a91b494097d06827df5a5\n'
+b'127169a28b68c1f09a6f28e289b7aafafe3105a3\n'
+b'777e41d9a9ba12b9a485300e16fa4405a4f633c0\n'
+b'59961945fd47abdcf8d526154befb24810fa9a79\n'
+b'59961945fd47abdcf8d526154befb24810fa9a79\n'
+b'5fe5a724533a4970c19fa7bc0986c1f646a07e4c\n'
+b'59961945fd47abdcf8d526154befb24810fa9a79\n'
+b'777e41d9a9ba12b9a485300e16fa4405a4f633c0\n'
+b'0e7b5db7a6ebfe3fa72598d0d7919d64bcfc2ab7\n'
+
+emacs ../../../../../../topo_order_commits.py
+
+b'777e41d9a9ba12b9a485300e16fa4405a4f633c0\n'
+b'3c25412d2521b8f77778de839acb0350492c3634\n'
+b'5fe5a724533a4970c19fa7bc0986c1f646a07e4c\n'
+b'59961945fd47abdcf8d526154befb24810fa9a79\n'
+b'59961945fd47abdcf8d526154befb24810fa9a79\n'
+b'59961945fd47abdcf8d526154befb24810fa9a79\n'
+b'777e41d9a9ba12b9a485300e16fa4405a4f633c0\n'
+b'3c25412d2521b8f77778de839acb0350492c3634\n'
+b'777e41d9a9ba12b9a485300e16fa4405a4f633c0\n'
+b'127169a28b68c1f09a6f28e289b7aafafe3105a3\n'
+b'dd9515b11ebcab015a8a91b494097d06827df5a5\n'
+b'0e7b5db7a6ebfe3fa72598d0d7919d64bcfc2ab7\n'
+
+filename = tempcwd + '/' + obj
+            #print(filename)                                                                                                                                                 
+            compressed_contents = open(filename, 'rb').read()
+            decompressed_contents = zlib.decompress(compressed_contents)
+            decoded = decompressed_contents.decode('cp437')
+            parent_index = decoded.find('parent ')
+            if(parent_index == -1):
+                continue
+            parent_commit = decoded[parent_index+7:]
+            end_index = parent_commit.find('author')
+            parent_commit = parent_commit[:end_index-1]
+            print(decompressed_contents)
+            print(decoded)
+            print("parent commit")
+            print(parent_commit)
+            commit_msg = decoded[:len(decoded)-1]
+            newline_index = commit_msg.rfind('\n')
+            commit_msg = commit_msg[newline_index+1:]
+            print("commit message")
+            print(commit_msg)
+
+print(hashe)
+        #we have the hash, now we access the object file that the hash points to and add parent                                                                              
+        obj_file_path = objects_dir + '/' + hashe[0:2] + '/' + hashe[2:]
+        print(obj_file_path)
+        #with the file path, we unpack the object with zlib                                                                                                                  
+        compressed_contents = open(obj_file_path, 'rb').read()
+        decompressed_contents = zlib.decompress(compressed_contents)
+        decoded = decompressed_contents.decode('cp437')
+        parent_index = decoded.find('parent ')
+        #if we can't find the parent, it hashe is a root node                                                                                                                
+        if(parent_index == -1):
+            root_commits.add(hashe)
+            if hashe not in hash_dict:
+                print("root and not in dict")
+                hash_dict[hashe] = CommitNode(hashe)
+        parent_commit = decoded[parent_index+7:decoded.find('author')-1]
+        #add parent to the commit we are on                                                                                                                                  
+        hash_dict[hashe].parents.add(parent_commit)
+        #add child to the parent                                                                                                                                             
+        if parent_commit not in hash_dict:
+            hash_dict[parent_commit] = CommitNode(parent_commit)
+        hash_dict[parent_commit].children.add(hashe)

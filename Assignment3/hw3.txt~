@@ -1,0 +1,49 @@
+Homework 3:
+
+Q1: The patch improves the performance. In the patch file,
+we see:
+-          if (ignore_mode == IGNORE_DEFAULT)
+-            ignore_mode = IGNORE_DOT_AND_DOTDOT;
+
+This means an if statement is removed from ls.c, which would
+improve performance.
+
+Q2: If my company adopts the patched version, it would
+need to pay attention to the usage of -a and -A when 
+using ls since the output is now slightly different
+with -a not overriding -A no matter what anymore.
+
+Q3: When this script is invoked on an empty file like
+/dev/null, an error occurs:
+
+Traceback (most recent call last):
+  File "./randline.py", line 70, in <module>
+    main()
+  File "./randline.py", line 64, in main
+    sys.stdout.write(generator.chooseline())
+  File "./randline.py", line 34, in chooseline
+    return random.choice(self.lines)
+  File "/usr/lib64/python2.7/random.py", line 274, in choice
+    return seq[int(self.random() * len(seq))]  # raises IndexError if seq is empty
+IndexError: list index out of range
+
+The error says that the line
+return seq[int(self.random() * len(seq))] raises IndexError
+if seq is empty. Since the file is empty, there are no
+lines to choose from, and therefore the script throws
+an IndexError.
+
+Q4: When I use python3 to run the script, I get an error:
+
+File "randline.py", line 65
+    except IOError as (errno, strerror):
+                      ^
+SyntaxError: invalid syntax
+
+This is because while exceptions in python2 are iterable,
+exceptions in python3 are not.
+
+Q5: When I run my script with python2, it works fine.
+This is probably because the methods/classes I used
+and imported, as well as how I wrote my code, also complies
+with python2.

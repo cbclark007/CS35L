@@ -1,0 +1,11 @@
+#!/bin/bash
+
+sed 's/\?\|<u>\|<\/u>//g' $1 |
+tr [:upper:] [:lower:]|
+tr "\`" "\'" |
+tr '-' ' ' |
+grep -E "<td[^>]*>[pk'mnwlhaeiou ]+<\/td>" |
+sed 's/<[^>]*>//g' |
+tr -s ' ' '[\n*]' |
+sort -u |
+grep -E '[^[:space:]]'

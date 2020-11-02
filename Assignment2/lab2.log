@@ -1,0 +1,174 @@
+Laboratory: Spell-checking Hawaiian
+
+I checked to see what the "locale" command outputted.
+
+The outputs did not incvlude LC_CTYPE="C" or LC_CTYPE="POSIX" so I ran:
+export LC_ALL='C'
+
+Then I ran:
+locale
+
+And it outputted all the LC_* variables as "C".
+
+I then ran:
+man sort
+to figure out what the sort command did and how to use it.
+
+I then ran:
+sort /usr/share/dict/words > words
+to store the output into a new file named words.
+
+Afterwards, I ran:
+wget https://web.cs.ucla/edu/classes/winter20/cs35L/assign/assign2.html
+to download the HTML page.
+
+Then, I ran:
+tr -c 'A-Za-z' '[\n*]' < assign2.html
+This command translates everything other than alphabetical 
+characters to a new line.
+
+I ran:
+tr -cs 'A-Za-z' '[\n*]' < assign2.html
+This command translates everything other than alphabetical 
+characters to newlines, then replaces each sequence of 
+repeated newlines with a single newline. It is different 
+from the previous command in that rather than having 
+possibly many newlines between each set of characters, 
+there is a standard single newline between each one.
+
+I ran: 
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort
+This command does the same thing as the above command without | sort, 
+except that it also sorts the resulting words
+in alphabetical order by piping the output from tr into the sort command.
+
+I ran:
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u
+This command does the same thing as the above command, except that with 
+-u (which is short for unique), it only keeps one of
+each set of characters or words. The output is still in alphabetical order.
+
+Then, I first ran:
+man comm
+to learn what comm does: it compares two sorted files line by line.
+Then I ran:
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm - words
+This command takes the sorted set outputted by the 
+previous command and compares it to the words file, 
+which contains a sorted dictionary. The output is in three columns. 
+The first column contains lines unique to the first output, 
+the second column contains lines unique to words, 
+and the third column contains lines common to both files.
+
+I ran:
+tr -cs 'A-Za-z' '[\n*] < assign2.html | sort -u | comm -23 - words
+This command takes the sorted output and compares it to words like the previous 
+command, but suppresses the second and third columns so that only 
+the first column is displayed. These are the words that are unique 
+to the sorted words from assign2.html. In other words, these are 
+words that the dictionary deemms to not be "real words".
+
+Now the Hawaiian section.
+I ran:
+wget https://www.mauimapp.com/moolelo/hwnwdshw.htm
+
+After much experimentation with tr and sed, 
+I found the proper command to remove all instances of ?, <u>, and </u>:
+sed 's/\?\|<u>\|<\/u>//g'
+
+The next step would be treating upper case letters as lower case letters:
+tr [:upper:] [:lower:]
+
+Following that, I treat the ASCII grave accent as the ASCII apostrophe:
+tr "\`" "\'"
+
+I also need to treat - as a space:
+tr '-' ' '
+
+Then I need to find each line with the given form in the table:
+grep -E "<td[^>]*>[pk'mnwlhaeiou ]+<\/td>"
+
+Afterwards, remove the <td> tags:
+sed 's/<[^>]*>//g'
+
+And then remove spaces, separating each word into a different line:
+tr -s ' ' '[\n*]'
+
+Then, sort the list:
+sort -u
+
+And finally, remove empty lines
+grep -E '[^[:space:]]'
+
+
+I then put these commands together into the shell script buildwords:
+
+#!/bin/bash
+
+sed 's/\?\|<u>\|<\/u>//g' $1 |
+tr [:upper:] [:lower:]|
+tr "\`" "\'" |
+tr '-' ' ' |
+grep -E "<td[^>]*>[pk'mnwlhaeiou ]+<\/td>" |
+sed 's/<[^>]*>//g' |
+tr -s ' ' '[\n*]' |
+sort -u |
+grep -E '[^[:space:]]'
+
+I then had to give the file execute permissions with:
+chmod +x buildwords
+
+I then wrote to hwords the words from the hawaii page:
+cat hwnwdshw.htm | ./buildwords | less > hwords
+
+From the ENGLISHCHECKER command, 
+I derived the following HAWAIIANCHECKER command:
+tr -cs "A-Z'a-z" '[\n*]' < assign2.html | 
+tr [:upper:] [:lower:] | sort -u | comm -23 - hwords
+This command should give a list of words that are 
+misspelled when checked against Hawaiian.
+
+With the command:
+tr -cs "A-z'a-z" '[\n*]' < assign2.html | 
+tr [:upper:] [:lower:] | sort -u | 
+comm -23 - hwords | wc -l
+I get that there are 562 misspelled words according to the hawaiian dictionary.
+
+I also checked the command with:
+tr -cs "A-z'a-z" '[\n*]' < hwords | 
+tr [:upper:] [:lower:] | sort -u | 
+comm -23 - hwords | wc -l
+Which checks the command against the dictionary. It outputs 0, 
+meaning there are no misspelled words in the dictionary.
+
+I then saved the misspelled hawaiian words to the file hawaii_misspelled:
+tr -cs "A-z'a-z" '[\n*]' < assign2.html | 
+tr [:upper:] [:lower:] | sort -u | 
+comm -23 - hwords > hawaii_misspelled
+
+I then did the same set of commands for the English checker:
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm -23 - words | wc -l
+Outputted 94, which means there are 94 misspelled english words.
+I saved those words to english_misspelled:
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | 
+sort -u | comm -23 - words > english_misspelled
+
+To get the unique words in each misspelled file, I ran:
+comm -23 english_misspelled hawaii_misspelled
+and 
+comm -23 english_misspelled hawaii_misspelled | wc -l
+
+There are 63 words that ENGLISHCHECKER reports as misspelled 
+but HAWAIICHECKER does not. This includes:
+lau
+wiki
+
+I ran:
+comm -13 english_misspelled hawaii_misspelled
+and
+comm -13 english_misspelled hawaii_misspelled | wc -l
+
+There are 531 words that HAWAIICHECKER reports as misspelled 
+but ENGLISCHECKER does not. This includes:
+want
+zero

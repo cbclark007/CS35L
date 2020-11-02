@@ -1,0 +1,227 @@
+Laboratory 5: System call programming and debugging
+
+I first made the files tr2b.c and tr2u.c in the  $HOME/CS35L/Assignment5 
+folder on the server.
+
+1. I started with tr2b.c:
+
+I first imported stdio.h, stdlib.h, and string.h and created my main function.
+
+My main function has two parameters: int argc and char** argv.
+
+I know that I need to have two inputs: from and to, aside from standard input,
+so argc should equal 2. I check that before moving forward. If argc isn't 2, 
+then I exit with an error code of 1.
+
+I test to see if the program works at this point by printing out how many
+args after compiling with ./test1 hi 12. Apparently, calling ./test1 counts
+as an argument, so I changed the if statement to check whether argc doesn't
+equal 3.
+
+Next, I need to check if the lengths of from and to are the same, and also
+make sure that every byte in from is different. If either of these conditions
+aren't met, I print an error message and exit.
+
+I go ahead and test the program so far. It tests inputs well enough.
+
+The, I read in standard input, constantly checking to see if a char needs to be
+switched. If it does, I putchar the switched char. Otherwise, I just stick
+the original character back into standard output.
+
+2. Now for tr2u.c:
+
+I copied everything from tr2b first, and then made some changes. 
+I had to include unistd.h, and then change how I read input from getchar/putchar
+to read/write.
+
+3. Next, I use the strace command to compare the system calls by tr2b and tr2u
+now that they both seem to work ok.
+
+First, I make a bigfile using the handy post from a fellow student on piazza
+containing 5 million bytes.
+
+a) Comparing when copying one file to another:
+
+tr2b:
+
+strace -c ./tr2b qwerty 123456 < bigfile > copyout.txt
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 42.42    0.000509           1       611           write
+ 31.08    0.000373           1       613           read
+  8.42    0.000101          11         9           mmap
+  5.75    0.000069          17         4           mprotect
+  3.25    0.000039          10         4           fstat
+  2.50    0.000030          15         2           open
+  1.92    0.000023          23         1           munmap
+  1.17    0.000014          14         1         1 access
+  1.17    0.000014          14         1           execve
+  1.08    0.000013           7         2           close
+  0.67    0.000008           8         1           brk
+  0.58    0.000007           7         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.001200                  1250         1 total
+
+There are 1250 calls when copying into another file for tr2b.
+
+tr2u:
+strace -c ./tr2u qwerty 123456 < bigfile > copyout2.txt
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 54.72   23.541696           5   5000000           write
+ 45.28   19.481505           4   5000002           read
+  0.00    0.000052           7         7           mmap
+  0.00    0.000050          13         4           mprotect
+  0.00    0.000019          10         2           open
+  0.00    0.000014          14         1           munmap
+  0.00    0.000009           5         2           fstat
+  0.00    0.000009           9         1         1 access
+  0.00    0.000009           9         1           execve
+  0.00    0.000008           4         2           close
+  0.00    0.000005           5         1           brk
+  0.00    0.000005           5         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00   43.023381              10000024         1 total
+
+There were a total of 10000024 calls for tr2u. This is quite a bit more than that
+of tr2b.
+
+b) copying a file to terminal:
+
+tr2b:
+
+strace -c ./tr2b qwerty 123456 < bigfile
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 91.14    0.014594           3      4883           write
+  6.87    0.001100           2       613           read
+  0.72    0.000115          13         9           mmap
+  0.36    0.000058          15         4           mprotect
+  0.22    0.000036           9         4           fstat
+  0.19    0.000030          15         2           open
+  0.14    0.000023          23         1           munmap
+  0.09    0.000015          15         1         1 access
+  0.09    0.000014           7         2           close
+  0.08    0.000013          13         1           execve
+  0.05    0.000008           8         1           brk
+  0.04    0.000007           7         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.016013                  5522         1 total
+
+There are 5522 calls for copying a file to the terminal for tr2b.
+
+tr2u:
+strace -c ./tr2u qwerty 123456 < bigfile
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 58.60   31.201043           6   5000000           write
+ 41.40   22.041440           4   5000002           read
+  0.00    0.000000           0         2           open
+  0.00    0.000000           0         2           close
+  0.00    0.000000           0         2           fstat
+  0.00    0.000000           0         7           mmap
+  0.00    0.000000           0         4           mprotect
+  0.00    0.000000           0         1           munmap
+  0.00    0.000000           0         1           brk
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00   53.242483              10000024         1 total
+
+There were 10000024 calls for tr2u, significantly more than that of tr2b.
+
+4. using the time command to measure how much faster one program is than another
+when copying the same amount of data:
+
+tr2b to file:
+time ./tr2b qwerty 123456 < bigfile > copyout.txt
+output:
+real 0m0.838s
+user 0m0.778s
+sys  0m0.016s
+
+tr2u to file:
+time ./tr2u qwerty 123456 < bigfile > copyout.txt
+output:
+real 0m12.745s
+user 0m3.394s
+sys  0m9.305s
+
+tr2b to terminal:
+time ./tr2b qwerty 123456 < bigfile
+output:
+real	0m0.986s
+user	0m0.873s
+sys	0m0.065s
+
+tr2u to terminal:
+time ./tr2u qwerty 123456 < bigfile
+output:
+real	0m23.743s
+user	0m6.949s
+sys	0m16.755s
+
+Buffered input/output runs much faster than unbuffered input/output, it seems.
+
+Homework:
+Varying input lines (line length varies)
+
+time ./sfrobu < empty
+real 0m0.003s
+user 0m0.000s
+sys  0m0.003s
+
+time ../Assignment4/sfrob < empty
+real 0m0.003s
+user 0m0.000s
+sys  0m0.002s
+
+time ./sfrobu < hundredlines
+real 0m0.002s
+user 0m0.001s
+sys  0m0.001s
+
+time ../Assignment4/sfrob < hundredlines
+real 0m0.003s
+user 0m0.001s
+sys  0m0.002s
+
+time ./sfrobu < tenk
+real 0m0.202s
+user 0m0.061s
+sys  0m0.140s
+
+time ../Assignment4/sfrob < tenk
+real 0m0.030s
+user 0m0.022s
+sys  0m0.005s
+
+time ./sfrobu < million
+real 0m14.048s
+user 0m4.401s
+sys  0m9.611s
+
+time ../Assignment4/sfrob < million
+real 0m2.366s
+user 0m1.734s
+sys  0m0.130s
+
+The equation I came up with that approximates the sys CPU time for sfrobu
+is approximately: 
+0.001 * 10^(log(n) - 2) where n is the number of input lines.
+
+For the first sfrob using sys CPU time, the equation I came up with was:
+0.004 * (log(n)) ^ (log(n)-4) where n is the number of input lines.
+
+The original sfrob with getchar() and putchar() is definitely faster than the
+unbuffered version that uses read() and write().
+
+Supposing the assignment were changed so that the rewritten program also had
+to use system calls rather than things like malloc, realloc, and free, the
+program would probably use mmap (in place of malloc), mremap (in place of
+realloc), and munmap (in place of free).

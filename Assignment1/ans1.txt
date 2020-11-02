@@ -1,0 +1,139 @@
+Laboratory 1: Linux and Emacs Scavenger Hunt
+
+1. "man -K string" searches for a specified string in all the man pages. I used the command "man man" and read through the options to find this command.
+
+2. mv is located in /usr/local/cs/bin, and sh is located in /usr/bin. Using man which, I found out that which shows the path and location of shell commands. It was also in one of the lecture videos. Then, I ran "which mv" and "which sh" to find the location of the programs.
+
+3. I checked the Week 1 Lab hints and ran "man find" to figure out what find does. It searches for files in a directory hierarchy. I found a search option called -regex. However, I couldn't properly get it to work for finding files. It would never print out anything. So, I found another option called -name. After some experimentation, I tried the command "find /usr/bin -name '[:alnum]r'", which seemed to work. It printed out a single line, which was /usr/bin/ar. However, I ran just "find /usr/bin" and saw that there were more than just that one. After some more experimentation, I found that "find /usr/bin -name '?r'" worked. It printed three lines: /usr/bin/tr, /usr/bin/ar, and /usr/bin/pr. Using the man command, I found that the command "ar" can create, modify, and extract from archives. "tr" translates or deletes characters. "pr" converts text files for printing.
+
+
+4. Using "ls -l /usr/bin/emacs", I found that that link points to /etc/alternatives/emacs. One of the hints in the presentation said to beware of chain links, so I ran "ls -l /etc/alternatives/emacs" and found that it points to /usr/bin/emacs-24.3. This is the file that is actually being executed. I ran "ls -l /usr/bin/emacs-24.3" and it is not a symbolic link.
+
+5. The gcc version is 9.2.0 (running "gcc -v"). The version of /usr/bin/gcc is 4.8.5 (running "/usr/bin/gcc -v"). They are different programs stored in completely different places. "which gcc" tells me that the plain gcc program is located in /usr/local/cs/bin. This is the in the first part of the PATH variable which is searched first. /usr/bin is further along in the PATH so that version is not used as the default gcc.
+
+6. u+sx,o-w means you set the user ID, add execute permissions to the user, and remove write permissions from other users not in the file group. When you execute, you execute with owner permission according to the slides. I also ran "man chmod" to find some of this out.
+
+7. Running "man find", I found the -mtime and -type option. Running "find /usr/local/cs -type d -mtime -28" for within the last 28 days, or 4 weeks, I found the following directories. There are 101 directories, which was found using "find /usr/local/cs -type d -mtime -28 | wc -l" (I ran this after exercise 8, so I had figured out how to use wc already).
+
+/usr/local/cs
+/usr/local/cs/src/grep
+/usr/local/cs/src/grep/RCS
+/usr/local/cs/share/info
+/usr/local/cs/share/man/man1
+/usr/local/cs/bin
+/usr/local/cs/.del
+/usr/local/cs/.del/grep-3.3
+/usr/local/cs/grep-3.4
+/usr/local/cs/grep-3.4/share
+/usr/local/cs/grep-3.4/share/locale
+/usr/local/cs/grep-3.4/share/locale/af
+/usr/local/cs/grep-3.4/share/locale/af/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/be
+/usr/local/cs/grep-3.4/share/locale/be/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/bg
+/usr/local/cs/grep-3.4/share/locale/bg/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/ca
+/usr/local/cs/grep-3.4/share/locale/ca/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/cs
+/usr/local/cs/grep-3.4/share/locale/cs/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/da
+/usr/local/cs/grep-3.4/share/locale/da/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/de
+/usr/local/cs/grep-3.4/share/locale/de/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/el
+/usr/local/cs/grep-3.4/share/locale/el/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/eo
+/usr/local/cs/grep-3.4/share/locale/eo/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/es
+/usr/local/cs/grep-3.4/share/locale/es/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/et
+/usr/local/cs/grep-3.4/share/locale/et/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/eu
+/usr/local/cs/grep-3.4/share/locale/eu/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/fi
+/usr/local/cs/grep-3.4/share/locale/fi/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/fr
+/usr/local/cs/grep-3.4/share/locale/fr/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/ga
+/usr/local/cs/grep-3.4/share/locale/ga/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/gl
+/usr/local/cs/grep-3.4/share/locale/gl/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/he
+/usr/local/cs/grep-3.4/share/locale/he/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/hr
+/usr/local/cs/grep-3.4/share/locale/hr/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/hu
+/usr/local/cs/grep-3.4/share/locale/hu/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/id
+/usr/local/cs/grep-3.4/share/locale/id/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/it
+/usr/local/cs/grep-3.4/share/locale/it/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/ja
+/usr/local/cs/grep-3.4/share/locale/ja/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/ko
+/usr/local/cs/grep-3.4/share/locale/ko/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/ky
+/usr/local/cs/grep-3.4/share/locale/ky/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/lt
+/usr/local/cs/grep-3.4/share/locale/lt/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/nb
+/usr/local/cs/grep-3.4/share/locale/nb/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/nl
+/usr/local/cs/grep-3.4/share/locale/nl/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/pa
+/usr/local/cs/grep-3.4/share/locale/pa/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/pl
+/usr/local/cs/grep-3.4/share/locale/pl/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/pt
+/usr/local/cs/grep-3.4/share/locale/pt/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/pt_BR
+/usr/local/cs/grep-3.4/share/locale/pt_BR/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/ro
+/usr/local/cs/grep-3.4/share/locale/ro/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/ru
+/usr/local/cs/grep-3.4/share/locale/ru/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/sk
+/usr/local/cs/grep-3.4/share/locale/sk/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/sl
+/usr/local/cs/grep-3.4/share/locale/sl/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/sr
+/usr/local/cs/grep-3.4/share/locale/sr/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/sv
+/usr/local/cs/grep-3.4/share/locale/sv/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/th
+/usr/local/cs/grep-3.4/share/locale/th/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/tr
+/usr/local/cs/grep-3.4/share/locale/tr/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/uk
+/usr/local/cs/grep-3.4/share/locale/uk/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/vi
+/usr/local/cs/grep-3.4/share/locale/vi/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/zh_CN
+/usr/local/cs/grep-3.4/share/locale/zh_CN/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/locale/zh_TW
+/usr/local/cs/grep-3.4/share/locale/zh_TW/LC_MESSAGES
+/usr/local/cs/grep-3.4/share/man
+/usr/local/cs/grep-3.4/share/man/man1
+/usr/local/cs/grep-3.4/share/info
+/usr/local/cs/grep-3.4/bin
+
+8. "which find" tells me find is located in /usr/bin. With "man find", I found -type l to search for symbolic links. "man wc" told me that the -l option will give me newline counts. Combining them, I used "find /usr/bin -type l | wc -l" to find the number of symbolic links, which was 280.
+
+9. librom1394.so.0.3.0 is the name of the oldest regular file in the /usr/lib64 directory. "man ls" to find -l (long listing), -t (for modification time), and -a for all files including ones that start with ".". I ran "ls -lta /usr/lib64" and looked at the last line, which was from December 28, 2013.
+
+10. I ran "man locale" command to find the following. The locale command displays information about the current locale, or all locales, on standard output. It displays current locale settings for each locale category. It gets the information from the environment variables that control the locale.
+
+11. downcase-dwim (M-x), downcase-region (C-x C-l), downcase-word (M-l)
+I used C-h a downcase to find these commands.
+
+12. C-h k C-M-r gives me a description of what C-M-r does. It does an incremental search backwards, and does a regex search with a prefix argument. It then saves a mark where the search started.
+
+C-h k C-M-v gives me a description of what C-M-v does. It runs the scroll-up command, which scrolls the selected window up.
+
+13. C-h k C-g gives me a description of what C-g does. It causes a quit function to run. It quits out of the current command window.
+
+14. C-h a yank lists all the commands that have yank in them. Just the yank command reinserts or pastes the last stretch of killed text.
+The shortcut is C-y.
+
+15. I ran ls -l /usr/bin and then in emacs, ran C-x d followed by /usr/bin --> Enter key. I found the C-x d command by doing C-h a dired to find the shortcut.
+The only difference I can see is that dired in Emacs includes files starting with "." and ls -l does not.

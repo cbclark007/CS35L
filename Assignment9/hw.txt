@@ -1,0 +1,23 @@
+Homework (SSH Questions)
+
+1. Other teams have been observing bytes. Is the network still secure?
+Even if other people observe the bytes, the network is still secure because the data
+is encrypted. Even if they tapped the keyboard, they wouldn't be able to obtain the exact
+same data as I did since it's on the server and I didn't type anything that would expose
+my data. However, if I were booting off a USB and they got hold of it, then my security
+would be compromised because they would be able to get the keys.
+
+2. gpg2 --verify doesn't really verify that you personally created the file in question.
+Acccording to the output, gpg gives a warning that the key is not certified with a trusted
+signature, and we don't know that the signature actually belongs to the owner. Anyone
+can use the public key to create a signature, so we don't know if the person who created
+it was the one who made the signature.
+
+To fix this, the key should be verified by signing it with the private key. Thus, it can
+become certified with a trusted signature.
+
+Some useful commands used
+gpg2 --gen-key
+gpg2 --armor --export
+gpg2 --armor --output sigfile --detach-sign file
+gpg2 --verify sigfile file

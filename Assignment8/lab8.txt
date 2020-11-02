@@ -1,0 +1,172 @@
+Laboratory 8: Git spelunking
+
+In ~eggert/src/gnu/emacs-CS-35L
+
+1. Working files only:
+After exploring the manual page of "du", I ran:
+
+du -s -h --exclude ".git"
+Output:
+159M
+(or 159 megabytes)
+
+To get the disk space used to represent the Git repository, I run:
+du -s -h .git
+Output:
+350M
+(or 350 Megabytes)
+
+To further inspect the contents of the git repository, I run
+$ du -h .git
+Which outputs directory sizes under .git
+I also run 
+$ du -h -a .git
+which includes files.
+
+I found that the .git/objects folder consumed the most repository space, with a total
+of 342M out of the 350 total. This is 97% of the space.
+
+Within it, there was a file:
+.git/objects/pack/pack-24e56b1749b9320c560213d9045fa6cee42b4174.pack
+That took up 311M of space.
+
+With some research, I found that pack files are where git compresses and stores various
+objects from different commits and versions. Obviously, since this is storing all the
+past data, it is going to take up a lot of space.
+
+2. # of branches local to the repository, # of branches remote
+
+First, I look at:
+man git branch
+
+To get a list of local branches, I run:
+git branch
+I then ran the following to get a total number of branches:
+git branch | wc -l
+Output:
+176
+
+There seem to be 176 local branches.
+
+The remote branches can be found with:
+git branch -r
+To get the number of lines (aka number of remote branches), I ran:
+git branch -r | wc -l
+Output:
+177
+
+However, origin/HEAD is not actually a branch, and it is included in the list of 
+remote branches.
+
+So, there are actually 176 remote branches.
+
+3. Remote repositories and where they are
+
+I read up on:
+man git remote
+
+I ran:
+git remote
+
+There was only one line of output:
+origin
+
+So it looks like there is only one repository remote to this repository.
+
+To find out where it was located, I ran:
+git remote -v
+
+The repository is located at:
+https://git.savannah.gnu.org/git/emacs.git
+
+4. Ten local branches most recently committed to
+
+man git for-each-ref
+to learn about the git for-each-ref command
+
+Then, I ran
+git for-each-ref --sort=-committerdate --count=10 refs/heads
+This outputted the 10 most recent branches most recently committed to:
+master
+scratch/joaot/make-completion-at-point-function
+feature/windows-with-utils
+scratch/completion-api
+scratch/a-modest-completion-redesign-proposal
+scratch/fido-mode
+feature/gnus-select2
+feature/extend_face_id
+scratch/jit-lock-antiblink-cleaned-up
+emacs-26
+
+5. How many commits are in the master branch?
+
+man git rev-list
+git rev-list --count master
+Output:
+139583
+
+There have been 139583 commits in the master branch.
+
+6. % of commits in any branch also in the master branch
+
+git rev-list HEAD --count --all
+output:
+143910
+
+139583/143910 = 0.969932 ==> approximately 97%
+
+7. 10 people who authored the most master-branch commits 2013 or later
+
+git rev-list -s -n --since=2013-01-01
+
+top 10 output:
+3691  Eli Zaretskii
+3644  Glenn Morris
+3604  Paul Eggert
+1806  Lars Ingebrigtsen
+1784  Stefan Monnier
+1571  Michael Albinus
+619  Dmitry Gutov
+576  Noam Postavsky
+471  Alan Mackenzie
+469  Juri Linkov
+
+8. gitk to visualize commit graph 
+
+git log --pretty=oneline --merges
+
+3342 lines were printed; I'll show the first few and the last few:
+86d8d9589370e8786c2cb245dad8527494009ac2 Merge branch 'master' of git.sv.gnu.org:/srv/git/emacs
+a15431ffe23838025e7b20131c16bbeb80ce4090 Merge branch 'master' of git.sv.gnu.org:/srv/git/emacs
+ccb8bbd581adac2cc1c770c266b5fd52da5c9402 Merge branch 'scratch/so-long-updates'
+31be86c3478b1ca587357bf6b2c8be8c68d6f047 Merge branch 'master' of git.savannah.gnu.org:/srv/git/emacs
+5803558cbf76ddae52d760b6329bbc1095524793 Merge branch 'scratch/so-long-updates'
+8ea63ecdd9b76fbe074bcd6b97ee8400667455a4 Merge from origin/emacs-26
+045bcdb7c410d4ee7cda1766c76e8bf7df3bf82f ; Merge from origin/emacs-26
+6624fc4bab44728ca996e6939bd3627d5d509b73 Merge from origin/emacs-26
+3d7d926e04ed1aa8ccd7f636194ee8cd27ea580a ; Merge from origin/emacs-26
+084007a5947980f3b61f52496d89560f9aa5bbf1 Merge branch 'master' of git.sv.gnu.org:/srv/git/emacs
+3d6075e3ee8c447f8974b37007a1b1ae1af8917c Merge branch 'feature/extend_face_id'
+e0a2dae0dbb5dcf22ff8153344d141c7bc82d17a Merge branch 'master' of git.savannah.gnu.org:/srv/git/emacs
+505550ba7b230d90d0b1e622121b3e34a19f7271 Merge branch 'master' of git.sv.gnu.org:/srv/git/emacs
+4638b5ce0ae80568ac3278a5d1ae67086bd7f616 Merge branch 'master' of git.savannah.gnu.org:/srv/git/emacs
+2698d3dba2e9858b026ed127d4de3f86810a5ef3 Merge branch 'feature/tabs'
+...
+...
+...
+9ae44db9cce6aefe5012afbfa8bbbb1757ee1b92 Merged in changes from CVS HEAD
+2a36494c42a1963846ea8c2dde48a7450d433c2a Merged in changes from CVS HEAD
+990e879437236fc76e827d6191899c117f01fd99 Merged in changes from CVS HEAD
+309990406b2d16da6ad4131c6530d309e44945ec Merged in changes from CVS HEAD
+b80bf66eabbf9e132e767b1421b2307e8c50afc1 Merged in changes from CVS HEAD
+12e1ee02b6f80a3e06f3ffb98f85e2023102f1e8 Merged in changes from CVS HEAD
+0221d2bfcbc9a3571fdbfbf3d8ad464aae4ffd24 Merged in changes from CVS HEAD
+6121cb80f0869e7fbf257acda0831cbcdb2d7b18 Merged in changes from CVS HEAD
+72d785653db3f07a7d918660214c62d730b47aba Merged in changes from CVS HEAD
+eb9332fa2e41dbe54f5427b9383cb4028a6f926f Merged in changes from CVS HEAD
+7c3a26158711d76ee77b0bd75fa9df56db5eb57d Merged in changes from CVS head
+096d4be33fc8bd54c363d05fff24f9f029acbf0a Merged in changes from CVS head
+8ed48c277afad174675b3d6dcb8e7b00a4bcc97d Merged in changes from CVS HEAD
+2e7f2ec031f1708b80df9dc1f60f6b1cb24a5c02 Merged in changes from CVS HEAD
+8f924df7df019cce90537647de2627581043b5c4 *** empty log message ***
+

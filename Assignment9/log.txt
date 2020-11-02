@@ -1,0 +1,36 @@
+Laboratory: SSH stuff
+
+$ ssh-keygen
+Enter file: Pressed enter for default
+Entered password twice
+
+$ eval `ssh-agent'
+$ ssh-add
+
+$ ssh-copy-id clarkc@lnxsrv07.seas.ucla.edu
+Entered password
+
+Now, I am able to log into the linux servers with
+$ ssh username@srv.seas.ucla.edu
+
+And it works for any of the servers!
+
+For port forwarding:
+Log in with:
+$ ssh -X clarkc@lnxsrv07.seas.ucla.edu
+$ xeyes
+
+The eyeballs pop up on my computer and follow my mouse
+
+I didn't have to set anything up for this; it worked with -X
+
+Multi-hop or "daisy-chain" connections
+To first connect, I run:
+$ ssh -A clarkc@lnxsrv07.seas.ucla.edu
+the -A is to enable agent forwarding
+
+Then, once there, I can ssh to any other linux server with
+$ ssh -A clarkc@lnxsrv*.seas.ucla.edu
+
+And I won't need to use my password because of the forwarding.
+

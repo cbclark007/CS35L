@@ -1,0 +1,18 @@
+--- timespec.h	2020-02-05 21:10:49.299852000 -0800
++++ timespec_patch.h	2020-02-05 21:14:12.944957000 -0800
+@@ -45,8 +45,13 @@
+ static inline int
+ timespec_cmp (struct timespec a, struct timespec b)
+ {
+-  int diff = a.tv_sec - b.tv_sec;
+-  return diff ? diff : a.tv_nsec - b.tv_nsec;
++  if(a.tv_sec == b.tv_sec) {
++    return 0;
++  } else if (a.tv_sec > b.tv_sec) {
++    return 1;
++  } else {
++    return -1;
++  }
+ }
+ 
+ # if ! HAVE_DECL_NANOSLEEP
